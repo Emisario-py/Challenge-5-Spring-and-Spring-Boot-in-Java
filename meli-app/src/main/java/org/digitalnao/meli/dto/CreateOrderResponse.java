@@ -1,7 +1,7 @@
 package org.digitalnao.meli.dto;
 
 import lombok.Data;
-import org.digitalnao.meli.domain.OrderStatus;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -21,7 +21,6 @@ public class CreateOrderResponse {
     private Long id;
     private String customerName;
     private String customerEmail;
-    private OrderStatus status;
     private BigDecimal total;
     private Instant createdAt;
     private List<Item> items;
