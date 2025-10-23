@@ -23,10 +23,6 @@ public class Order {
     private String customerEmail;
 
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status = OrderStatus.PENDING;
-
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
@@ -36,7 +32,7 @@ public class Order {
     private Instant createdAt = Instant.now();
 
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
     private List<OrderItem> items = new ArrayList<>();
 
@@ -48,8 +44,6 @@ public class Order {
     public void setCustomerName(String customerName) { this.customerName = customerName; }
     public String getCustomerEmail() { return customerEmail; }
     public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
-    public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
     public Instant getCreatedAt() { return createdAt; }

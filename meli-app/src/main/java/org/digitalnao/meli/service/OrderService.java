@@ -65,7 +65,6 @@ public class OrderService {
         res.setId(saved.getId());
         res.setCustomerName(saved.getCustomerName());
         res.setCustomerEmail(saved.getCustomerEmail());
-        res.setStatus(saved.getStatus());
         res.setTotal(saved.getTotal());
         res.setCreatedAt(saved.getCreatedAt());
 
@@ -100,7 +99,6 @@ public class OrderService {
         res.setId(saved.getId());
         res.setCustomerName(saved.getCustomerName());
         res.setCustomerEmail(saved.getCustomerEmail());
-        res.setStatus(saved.getStatus());
         res.setTotal(saved.getTotal());
         res.setCreatedAt(saved.getCreatedAt());
         res.setItems(saved.getItems().stream()
