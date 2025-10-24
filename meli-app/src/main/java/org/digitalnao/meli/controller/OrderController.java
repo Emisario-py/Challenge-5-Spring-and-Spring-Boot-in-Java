@@ -1,57 +1,52 @@
 package org.digitalnao.meli.controller;
 
-import org.digitalnao.meli.dto.CreateOrderRequest;
-import org.digitalnao.meli.dto.CreateOrderResponse;
+import lombok.RequiredArgsConstructor;
+import org.digitalnao.meli.dto.order.CreateOrderRequest;
+import org.digitalnao.meli.dto.order.OrderResponse;
 import org.digitalnao.meli.service.OrderService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
+
     private final OrderService orderService;
 
-
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
-
-
-    /**
-     * Create a new order.
-     * @return HTTP 201 with the created order payload.
-     */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public CreateOrderResponse create(@Valid @RequestBody CreateOrderRequest request) {
-        return orderService.createOrder(request);
-    }
-
+    // GET /api/orders
     @GetMapping
-    public List<CreateOrderResponse> getAll() {
-        return orderService.getAllOrders();
+    public ResponseEntity<List<OrderResponse>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
     }
 
-    // Obtener una orden específica por ID
+    // GET /api/orders/{id}
     @GetMapping("/{id}")
-    public CreateOrderResponse getById(@PathVariable Long id) {
-        return orderService.getOrderById(id);
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
-    // Actualizar una orden existente (solo nombre, email o ítems)
+    // POST /api/orders
+    @PostMapping
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
+        return ResponseEntity.ok(orderService.createOrder(request));
+    }
+
+    // PUT /api/orders/{id}
     @PutMapping("/{id}")
-    public CreateOrderResponse updateOrder(@PathVariable Long id, @Valid @RequestBody CreateOrderRequest request) {
-        return orderService.updateOrder(id, request);
+    public ResponseEntity<OrderResponse> updateOrder(
+            @PathVariable Long id,
+            @RequestBody org.digitalnao.meli.domain.Order orderDetails
+    ) {
+        return ResponseEntity.ok(orderService.updateOrder(id, orderDetails));
     }
 
-    // Eliminar una orden por ID
+    // DELETE /api/orders/{id}
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteOrder(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
     }
 }
