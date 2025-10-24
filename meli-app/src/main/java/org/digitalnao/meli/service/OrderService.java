@@ -1,163 +1,130 @@
 package org.digitalnao.meli.service;
 
+import lombok.RequiredArgsConstructor;
+import org.digitalnao.meli.domain.Client;
+import org.digitalnao.meli.domain.Item;
 import org.digitalnao.meli.domain.Order;
-import org.digitalnao.meli.domain.OrderItem;
-import org.digitalnao.meli.dto.CreateOrderRequest;
-import org.digitalnao.meli.dto.CreateOrderRequestItem;
-import org.digitalnao.meli.dto.CreateOrderResponse;
+import org.digitalnao.meli.dto.order.CreateOrderRequest;
+import org.digitalnao.meli.dto.order.OrderResponse;
+import org.digitalnao.meli.mapper.OrderMapper;
+import org.digitalnao.meli.repository.ClientRepository;
 import org.digitalnao.meli.repository.OrderRepository;
 import org.springframework.stereotype.Service;
-import java.util.stream.Collectors;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
+
     private final OrderRepository orderRepository;
+    private final ClientRepository clientRepository;
 
-
-    public OrderService(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
-    }
-
-
-
-    /**
-     * Creates a new order computing totals from the incoming request and persists it.
-     */
-    public CreateOrderResponse createOrder(CreateOrderRequest req) {
-        Order order = new Order();
-        order.setCustomerName(req.getCustomerName());
-        order.setCustomerEmail(req.getCustomerEmail());
-
-
-        List<OrderItem> items = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
-
-
-        for (CreateOrderRequestItem it : req.getItems()) {
-            OrderItem item = new OrderItem();
-            item.setProductId(it.getProductId());
-            item.setName(it.getName());
-            item.setQuantity(it.getQuantity());
-            item.setUnitPrice(it.getUnitPrice());
-            BigDecimal lineTotal = it.getUnitPrice().multiply(BigDecimal.valueOf(it.getQuantity()));
-            item.setLineTotal(lineTotal);
-            items.add(item);
-            total = total.add(lineTotal);
-        }
-
-
-        order.setItems(items);
-        order.setTotal(total);
-
-
-        Order saved = orderRepository.save(order);
-
-
-// map to response
-        CreateOrderResponse res = new CreateOrderResponse();
-        res.setId(saved.getId());
-        res.setCustomerName(saved.getCustomerName());
-        res.setCustomerEmail(saved.getCustomerEmail());
-        res.setTotal(saved.getTotal());
-        res.setCreatedAt(saved.getCreatedAt());
-
-
-        List<CreateOrderResponse.Item> respItems = saved.getItems().stream()
-                .map(i -> new CreateOrderResponse.Item(
-                        i.getId(), i.getProductId(), i.getName(), i.getQuantity(), i.getUnitPrice(), i.getLineTotal()
-                )).toList();
-        res.setItems(respItems);
-
-
-        return res;
-    }
-
-    // Obtener todas las órdenes
-    public List<CreateOrderResponse> getAllOrders() {
+    // GET /api/orders
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getAllOrders() {
         return orderRepository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(OrderMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
-    // Obtener una orden por ID
-    public CreateOrderResponse getOrderById(Long id) {
-        return orderRepository.findById(id)
-                .map(this::mapToResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+    // GET /api/orders/{id}
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        return OrderMapper.toResponse(order);
     }
 
-    // Mapeo reutilizable
-    private CreateOrderResponse mapToResponse(Order saved) {
-        CreateOrderResponse res = new CreateOrderResponse();
-        res.setId(saved.getId());
-        res.setCustomerName(saved.getCustomerName());
-        res.setCustomerEmail(saved.getCustomerEmail());
-        res.setTotal(saved.getTotal());
-        res.setCreatedAt(saved.getCreatedAt());
-        res.setItems(saved.getItems().stream()
-                .map(i -> new CreateOrderResponse.Item(
-                        i.getId(), i.getProductId(), i.getName(), i.getQuantity(), i.getUnitPrice(), i.getLineTotal()
-                )).toList());
-        return res;
-    }
-
-    // Actualizar una orden existente
-    public CreateOrderResponse updateOrder(Long id, CreateOrderRequest req) {
-        // Buscar la orden existente
-        Order existing = orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
-
-        // Actualizar datos del cliente
-        existing.setCustomerName(req.getCustomerName());
-        existing.setCustomerEmail(req.getCustomerEmail());
-
-        // Limpiar los ítems previos de la misma lista (sin reemplazarla)
-        List<OrderItem> items = existing.getItems();
-        items.clear(); // gracias a orphanRemoval=true, Hibernate eliminará los registros previos
-
-        BigDecimal total = BigDecimal.ZERO;
-
-        // Crear y agregar los nuevos ítems
-        for (CreateOrderRequestItem it : req.getItems()) {
-            OrderItem item = new OrderItem();
-            item.setProductId(it.getProductId());
-            item.setName(it.getName());
-            item.setQuantity(it.getQuantity());
-            item.setUnitPrice(it.getUnitPrice());
-
-            BigDecimal lineTotal = it.getUnitPrice().multiply(BigDecimal.valueOf(it.getQuantity()));
-            item.setLineTotal(lineTotal);
-
-            items.add(item);
-            total = total.add(lineTotal);
+    // POST /api/orders
+    @Transactional
+    public OrderResponse createOrder(CreateOrderRequest request) {
+        if (request.getId() == null) {
+            throw new RuntimeException("Order ID must be provided manually.");
         }
 
-        // Actualizar el total de la orden
-        existing.setTotal(total);
+        if (orderRepository.existsById(request.getId())) {
+            throw new RuntimeException("Order with ID " + request.getId() + " already exists.");
+        }
 
-        // Guardar la orden actualizada
-        Order saved = orderRepository.save(existing);
+        Client client = clientRepository.findById(request.getClientId())
+                .orElseThrow(() -> new RuntimeException("Client not found with id: " + request.getClientId()));
 
-        // Retornar respuesta mapeada
-        return mapToResponse(saved);
+        Order order = new Order();
+        order.setId(request.getId()); // ✅ Copiamos el ID manualmente
+        order.setClient(client);
+
+        // Mapear los items
+        if (request.getItems() != null) {
+            order.setItems(
+                    request.getItems().stream().map(dto -> {
+                        Item item = new Item();
+                        item.setId(dto.getId()); // ✅ si los manejas manualmente
+                        item.setProductId(dto.getProductId());
+                        item.setName(dto.getName());
+                        item.setQuantity(dto.getQuantity());
+                        item.setUnitPrice(dto.getUnitPrice());
+                        item.setOrder(order);
+                        return item;
+                    }).collect(Collectors.toList())
+            );
+        }
+
+        Order saved = orderRepository.save(order);
+
+        return OrderMapper.toResponse(saved);
     }
 
 
-    // Eliminar una orden por ID
+    // PUT /api/orders/{id}
+    @Transactional
+    public OrderResponse updateOrder(Long id, Order orderDetails) {
+        Order existing = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+
+        // Actualizar cliente si se envía uno nuevo
+        if (orderDetails.getClient() != null) {
+            existing.setClient(orderDetails.getClient());
+        }
+
+        // Reemplazar items si mandan nuevos
+        if (orderDetails.getItems() != null && !orderDetails.getItems().isEmpty()) {
+
+            // Limpiar los actuales (orphanRemoval = true borra en cascada)
+            existing.getItems().clear();
+
+            // Inicializar nuevo total
+            BigDecimal newTotal = BigDecimal.ZERO;
+
+            // Agregar nuevos items a la orden
+            for (Item newItem : orderDetails.getItems()) {
+                newItem.setOrder(existing);
+                existing.getItems().add(newItem); // ✅ Aquí está el paso que faltaba
+                newTotal = newTotal.add(
+                        newItem.getUnitPrice().multiply(BigDecimal.valueOf(newItem.getQuantity()))
+                );
+            }
+
+        }
+
+        existing.setCreatedAt(orderDetails.getCreatedAt() != null
+                ? orderDetails.getCreatedAt()
+                : existing.getCreatedAt());
+
+        Order updated = orderRepository.save(existing);
+        return OrderMapper.toResponse(updated);
+    }
+
+
+    // DELETE /api/orders/{id}
+    @Transactional
     public void deleteOrder(Long id) {
         if (!orderRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+            throw new RuntimeException("Order not found with id: " + id);
         }
         orderRepository.deleteById(id);
     }
-
 }
-
-
