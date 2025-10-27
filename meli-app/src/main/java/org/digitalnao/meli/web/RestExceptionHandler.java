@@ -11,6 +11,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * REST exception handler specifically for validation errors in API requests.
+ * This controller advice component intercepts method argument validation exceptions
+ * and transforms them into structured error responses. It extracts field-level
+ * validation errors and formats them into a user-friendly response map, providing
+ * clear feedback about validation failures with appropriate HTTP status codes.
+ *
+ * @author Emiliano Osuna
+ * @version 1.0
+ */
 
 @RestControllerAdvice
 public class RestExceptionHandler {
