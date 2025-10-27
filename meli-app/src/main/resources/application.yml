@@ -3,4 +3,4 @@ spring:
     name: meli-app
 
   profiles:
-    active: dev  # Puedes cambiarlo a 'prod' o 'test' si es necesario
+    active: dev

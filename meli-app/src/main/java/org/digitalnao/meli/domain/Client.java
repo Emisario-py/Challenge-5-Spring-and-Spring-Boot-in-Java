@@ -5,6 +5,17 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity class representing a client in the system.
+ * This domain model stores client information including personal details
+ * such as name, address, age, and email. Each client can have multiple
+ * orders associated with them through a one-to-many relationship.
+ * The entity is mapped to the "clients" table in the database.
+ *
+ * @author Emiliano Osuna
+ * @version 1.0
+ */
+
 @Entity
 @Table(name = "clients")
 @Data

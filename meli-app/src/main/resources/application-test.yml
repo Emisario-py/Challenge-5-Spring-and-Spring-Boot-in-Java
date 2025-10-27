@@ -4,7 +4,9 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
-
+  sql:
+    init:
+      mode: never
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -14,6 +16,3 @@ logging:
   level:
     root: INFO
 
-  sql:
-    init:
-      mode: never

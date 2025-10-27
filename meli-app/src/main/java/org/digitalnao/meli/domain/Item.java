@@ -4,6 +4,18 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
+/**
+ * Entity class representing an item within an order.
+ * This domain model captures product information including product ID,
+ * name, quantity, and unit price. Each item belongs to a single order
+ * through a many-to-one relationship. Items represent individual products
+ * that are part of a customer's order.
+ * The entity is mapped to the "items" table in the database.
+ *
+ * @author Emiliano Osuna
+ * @version 1.0
+ */
+
 @Entity
 @Table(name = "items")
 @Data
