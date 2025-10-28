@@ -69,7 +69,7 @@ class OrderIntegrationTest {
     @Test
     @DisplayName("GET /api/orders - Debe obtener todas las órdenes")
     void testGetAllOrders() throws Exception {
-        // Crear órdenes de prueba
+
         createAndSaveOrder(testClient, 1L);
         createAndSaveOrder(testClient, 2L);
 
@@ -92,23 +92,23 @@ class OrderIntegrationTest {
     @Test
     @DisplayName("POST /api/orders - Debe crear una orden con items")
     void testCreateOrder() throws Exception {
-        // Preparar items - IMPORTANTE: Asignar IDs manualmente
+
         CreateItemRequest item1 = new CreateItemRequest();
-        item1.setId(1001L);  // ← AGREGAR ESTO
+        item1.setId(1001L);
         item1.setProductId("PROD-001");
         item1.setName("Laptop");
         item1.setQuantity(1);
         item1.setUnitPrice(new BigDecimal("999.99"));
 
         CreateItemRequest item2 = new CreateItemRequest();
-        item2.setId(1002L);  // ← AGREGAR ESTO
+        item2.setId(1002L);
         item2.setProductId("PROD-002");
         item2.setName("Mouse");
         item2.setQuantity(2);
         item2.setUnitPrice(new BigDecimal("29.99"));
 
         CreateOrderRequest request = new CreateOrderRequest();
-        request.setId(200L);  // También asegúrate de tener esto
+        request.setId(200L);
         request.setClientId(testClient.getId());
         request.setItems(Arrays.asList(item1, item2));
 

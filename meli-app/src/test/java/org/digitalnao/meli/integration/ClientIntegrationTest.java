@@ -65,7 +65,7 @@ class ClientIntegrationTest {
     @DisplayName("POST /api/clients - Debe crear un cliente correctamente")
     void testCreateClient() throws Exception {
         Client newClient = new Client();
-        newClient.setId(100L); // ID manual porque no hay @GeneratedValue
+        newClient.setId(100L);
         newClient.setClientName("Nuevo Cliente");
         newClient.setAddress("Calle Nueva 456");
         newClient.setAge(25);
@@ -79,7 +79,6 @@ class ClientIntegrationTest {
                 .andExpect(jsonPath("$.clientName").value("Nuevo Cliente"))
                 .andExpect(jsonPath("$.email").value("nuevo@example.com"));
 
-        // Verificar que se guardó en BD
         assertThat(clientRepository.findById(100L)).isPresent();
     }
 
@@ -123,7 +122,6 @@ class ClientIntegrationTest {
                 .andExpect(jsonPath("$.email").value("updated@example.com"))
                 .andExpect(jsonPath("$.age").value(35));
 
-        // Verificar en BD
         Client updatedClient = clientRepository.findById(client.getId()).orElseThrow();
         assertThat(updatedClient.getClientName()).isEqualTo("Updated Name");
     }
@@ -137,14 +135,12 @@ class ClientIntegrationTest {
         mockMvc.perform(delete("/api/clients/{id}", clientId))
                 .andExpect(status().isNoContent());
 
-        // Verificar que ya no existe
         assertThat(clientRepository.findById(clientId)).isEmpty();
     }
 
-    // Helper method
     private Client createAndSaveClient(String name, String email) {
         Client client = new Client();
-        client.setId(System.currentTimeMillis()); // ID único temporal
+        client.setId(System.currentTimeMillis());
         client.setClientName(name);
         client.setAddress("Test Address 123");
         client.setAge(30);

@@ -54,7 +54,6 @@ class ItemIntegrationTest {
         orderRepository.deleteAll();
         clientRepository.deleteAll();
 
-        // Crear cliente
         Client client = new Client();
         client.setId(1L);
         client.setClientName("Test Client");
@@ -63,7 +62,6 @@ class ItemIntegrationTest {
         client.setEmail("test@example.com");
         client = clientRepository.save(client);
 
-        // Crear orden
         testOrder = new Order();
         testOrder.setId(1L);
         testOrder.setClient(client);
@@ -74,7 +72,7 @@ class ItemIntegrationTest {
     @Test
     @DisplayName("GET /api/items - Debe obtener todos los items")
     void testGetAllItems() throws Exception {
-        // Crear items de prueba
+
         createAndSaveItem(testOrder, 10L, "PROD-001", "Laptop");
         createAndSaveItem(testOrder, 20L, "PROD-002", "Mouse");
 
@@ -121,7 +119,6 @@ class ItemIntegrationTest {
                 .andExpect(jsonPath("$.unitPrice").value(49.99))
                 .andExpect(jsonPath("$.orderId").value(testOrder.getId()));
 
-        // Verificar en BD
         assertThat(itemRepository.findById(200L)).isPresent();
     }
 
@@ -146,7 +143,6 @@ class ItemIntegrationTest {
                 .andExpect(jsonPath("$.quantity").value(5))
                 .andExpect(jsonPath("$.unitPrice").value(199.99));
 
-        // Verificar en BD
         Item updatedItem = itemRepository.findById(item.getId()).orElseThrow();
         assertThat(updatedItem.getName()).isEqualTo("Updated Name");
         assertThat(updatedItem.getQuantity()).isEqualTo(5);
@@ -161,12 +157,10 @@ class ItemIntegrationTest {
         mockMvc.perform(delete("/api/items/{id}", itemId))
                 .andExpect(status().isNoContent());
 
-        // Verificar que ya no existe
         assertThat(itemRepository.findById(itemId)).isEmpty();
     }
 
 
-    // Helper method
     private Item createAndSaveItem(Order order, Long itemId, String productId, String name) {
         Item item = new Item();
         item.setId(itemId);
