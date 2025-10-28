@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: meli-app
+
+  profiles:
+    active: dev
